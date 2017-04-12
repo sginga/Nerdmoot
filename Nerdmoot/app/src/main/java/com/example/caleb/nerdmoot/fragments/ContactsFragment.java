@@ -75,7 +75,12 @@ public class ContactsFragment extends Fragment{
         tempContacts.add(contact3);
         tempContacts.add(contact4);
         tempContacts.add(contact5);
-
+        contacts.clear();
+        contacts.add(contact1);
+        contacts.add(contact2);
+        contacts.add(contact3);
+        contacts.add(contact4);
+        contacts.add(contact5);
 
         etSearch = (EditText) contactsView.findViewById(R.id.etSearchContacts);
         etSearch.addTextChangedListener(new TextWatcher() {
