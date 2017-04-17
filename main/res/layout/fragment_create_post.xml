@@ -1,0 +1,33 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_height="match_parent"
+    tools:context="com.example.caleb.nerdmoot.fragments.CreatePostFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="126dp"
+        android:ems="10"
+        android:id="@+id/etTitle"
+        android:inputType="text"
+        android:hint="Title"
+        android:gravity="top|left" />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="329dp"
+        android:inputType="textPersonName"
+        android:ems="10"
+        android:id="@+id/etPost"
+        android:gravity="top|left"
+        android:hint="Post" />
+
+    <Button
+        android:text="@string/post"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnPost" />
+</LinearLayout>
