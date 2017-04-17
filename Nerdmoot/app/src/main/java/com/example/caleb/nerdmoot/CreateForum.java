@@ -1,18 +1,41 @@
 package com.example.caleb.nerdmoot;
 
 import android.annotation.SuppressLint;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import com.example.caleb.nerdmoot.data.ForumContract;
+import com.example.caleb.nerdmoot.data.ForumDBHelper;
+import com.pubnub.api.PNConfiguration;
+import com.pubnub.api.PubNub;
+import com.pubnub.api.callbacks.PNCallback;
+import com.pubnub.api.callbacks.SubscribeCallback;
+import com.pubnub.api.enums.PNStatusCategory;
+import com.pubnub.api.models.consumer.PNPublishResult;
+import com.pubnub.api.models.consumer.PNStatus;
+import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
+import com.pubnub.api.models.consumer.pubsub.PNPresenceEventResult;
+
+import java.util.Arrays;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
  * status bar and navigation/system bar) with user interaction.
  */
 public class CreateForum extends AppCompatActivity {
+
+    PNConfiguration pnConfiguration = new PNConfiguration();
+
+
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -50,6 +73,7 @@ public class CreateForum extends AppCompatActivity {
         }
     };
     private View mControlsView;
+    private EditText mContentTitleView;
     private final Runnable mShowPart2Runnable = new Runnable() {
         @Override
         public void run() {
@@ -83,15 +107,91 @@ public class CreateForum extends AppCompatActivity {
         }
     };
 
+
+    private void displayDatabaseInfo()
+    {
+
+        ForumDBHelper mDbHelper = new ForumDBHelper(this);
+
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM " + ForumContract.ForumEntry.TABLE_NAME, null);
+
+        try
+        {
+            TextView data = (TextView) findViewById(R.id.Test);
+            data.setText("num rows in database: " + cursor.getCount());
+        }
+        finally
+        {
+        cursor.close();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //initializes pubnub to our free connection
+        pnConfiguration.setSubscribeKey("sub-c-b3e75a4e-212a-11e7-894d-0619f8945a4f");
+        pnConfiguration.setPublishKey("pub-c-e3eede0d-be2c-4792-93eb-f82b7817bae2");
+        pnConfiguration.setSecure(false);
+        final PubNub pubnub = new PubNub(pnConfiguration);
 
         setContentView(R.layout.activity_create_forum);
 
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
-        mContentView = findViewById(R.id.fullscreen_content);
+        mContentView = findViewById(R.id.forum_content);
+        mContentTitleView = (EditText) findViewById(R.id.Test);
+
+        findViewById(R.id.dummy_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                class complexData {
+                    String fieldA;
+                    int fieldB;
+                }
+
+                PubNub pubnub= new PubNub(pnConfiguration);
+
+                pubnub.addListener(new SubscribeCallback() {
+                    @Override
+                    public void status(PubNub pubnub, PNStatus status) {
+                        if (status.getCategory() == PNStatusCategory.PNConnectedCategory){
+                            pubnub.publish().channel(mContentTitleView.getText().toString()).message(mContentView.toString()).async(new PNCallback<PNPublishResult>() {
+                                @Override
+                                public void onResponse(PNPublishResult result, PNStatus status) {
+                                    if (status.isError())
+                                    {
+                                        //something went wrong
+                                        Log.e("ERR", "Publishing error");
+                                    }
+                                    else
+                                    {
+                                        Log.v("GOOD", "Publishing worked");
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void message(PubNub pubnub, PNMessageResult message) {
+
+                    }
+
+                    @Override
+                    public void presence(PubNub pubnub, PNPresenceEventResult presence) {
+
+                    }
+                });
+
+                pubnub.subscribe().channels(Arrays.asList(mContentTitleView.getText().toString()));
+
+            }
+        });
 
 
         // Set up the user interaction to manually show or hide the system UI.
@@ -161,3 +261,4 @@ public class CreateForum extends AppCompatActivity {
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 }
+
